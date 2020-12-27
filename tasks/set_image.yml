@@ -1,0 +1,12 @@
+---
+
+- name: Check github for current VERSION
+  uri:
+    url: "https://raw.githubusercontent.com/ansible/awx/devel/VERSION"
+    return_content: yes
+  register: response
+  
+- name: Set DockerHub Image Paths
+  set_fact:
+    awx_docker_actual_image: "{{ dockerhub_base }}/awx:{{response.content | trim}}"
+  when: dockerhub_base is defined

@@ -1,0 +1,43 @@
+---
+
+- name: create project folder
+  file:
+    path: "{{ project_data_dir }}"
+    owner: "{{ ansible_user }}"
+    group: users
+    mode: '0755'
+    state: directory
+  become: yes
+
+- name: create database folder
+  file:
+    path: "{{ postgres_data_dir }}"
+    owner: "{{ ansible_user }}"
+    group: users
+    mode: '0755'
+    state: directory
+  become: yes
+
+- name: create docker folder
+  file:
+    path: "{{ docker_compose_dir }}"
+    owner: "{{ ansible_user }}"
+    group: users
+    mode: '0755'
+    state: directory
+  become: yes
+
+- name: Generate broadcast websocket secret
+  set_fact:
+    broadcast_websocket_secret: "{{ lookup('password', '/dev/null length=128') }}"
+    run_once: true
+    no_log: true
+  when: broadcast_websocket_secret is not defined
+
+- import_tasks: upgrade_postgres.yml
+  when:
+    - postgres_data_dir is defined
+    - pg_hostname is not defined
+
+- import_tasks: set_image.yml
+- import_tasks: compose.yml
