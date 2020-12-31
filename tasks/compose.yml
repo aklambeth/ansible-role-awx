@@ -41,14 +41,17 @@
         project_src: "{{ docker_compose_dir }}"
         restarted: "{{ awx_compose_config is changed or awx_secret_key is changed }}"
       register: awx_compose_start
-
+      become: yes
+        
     - name: Update CA trust in awx_web container
       command: docker exec awx_web '/usr/bin/update-ca-trust'
       when: awx_compose_config.changed or awx_compose_start.changed
+      become: yes
 
     - name: Update CA trust in awx_task container
       command: docker exec awx_task '/usr/bin/update-ca-trust'
       when: awx_compose_config.changed or awx_compose_start.changed
+      become: yes
 
     - name: Create Preload data
       command: docker exec awx_task bash -c "/usr/bin/awx-manage create_preload_data"
@@ -57,3 +60,8 @@
       changed_when: "'added' in cdo.stdout"
       become: yes
   when: compose_start_containers|bool
+
+- name: install awx as service
+  command: "chdir={{ docker_compose_dir }} dcsg install docker-compose.yml"
+  become: yes
+
